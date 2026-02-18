@@ -54,7 +54,7 @@ type Message struct {
 // NewClient creates a new Kafka client
 func NewClient(brokers []string) (*Client, error) {
 	config := sarama.NewConfig()
-	config.Version = sarama.V2_6_0_0
+	config.Version = sarama.V3_0_0_0
 	config.Consumer.Return.Errors = true
 
 	admin, err := sarama.NewClusterAdmin(brokers, config)

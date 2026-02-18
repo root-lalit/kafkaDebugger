@@ -56,6 +56,7 @@ func (i item) FilterValue() string { return i.title }
 
 type errMsg struct{ err error }
 type statusMsg string
+type kafkaClientMsg *kafka.Client
 type consumerGroupsMsg []string
 type topicsMsg []kafka.TopicInfo
 type groupDetailsMsg *kafka.ConsumerGroupInfo
@@ -155,6 +156,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case statusMsg:
 		m.statusMsg = string(msg)
+		m.loading = false
+		return m, nil
+
+	case kafkaClientMsg:
+		m.kafkaClient = msg
+		m.statusMsg = "Connected to Kafka"
 		m.loading = false
 		return m, nil
 
@@ -351,8 +358,7 @@ func (m Model) connectKafka() tea.Cmd {
 		if err != nil {
 			return errMsg{err}
 		}
-		m.kafkaClient = client
-		return statusMsg("Connected to Kafka")
+		return kafkaClientMsg(client)
 	}
 }
 
