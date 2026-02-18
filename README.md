@@ -45,7 +45,10 @@ A powerful Terminal UI (TUI) application for debugging and monitoring Apache Kaf
 git clone https://github.com/root-lalit/kafkaDebugger.git
 cd kafkaDebugger
 
-# Build the application
+# Build the application using Makefile
+make build
+
+# Or build directly with Go
 go build -o kafkaDebugger .
 
 # Run the application
@@ -57,6 +60,60 @@ go build -o kafkaDebugger .
 ```bash
 go install github.com/root-lalit/kafkaDebugger@latest
 ```
+
+## Quick Start with Docker
+
+For a quick test environment, you can use the included Docker Compose file:
+
+```bash
+# Start Kafka and Zookeeper
+docker-compose up -d
+
+# Wait for Kafka to be ready (about 30 seconds)
+sleep 30
+
+# Run the demo setup script to create sample data
+./demo-setup.sh
+
+# Run the Kafka Debugger
+./kafkaDebugger
+
+# When done, stop the services
+docker-compose down
+```
+
+Or use the Makefile for convenience:
+
+```bash
+# Start Kafka environment
+make docker-up
+
+# Wait for Kafka to be ready
+sleep 30
+
+# Set up demo data
+make demo
+
+# Run the application
+make run
+
+# When done, stop the services
+make docker-down
+```
+
+## Makefile Commands
+
+The project includes a Makefile for common tasks:
+
+- `make build` - Build the application
+- `make run` - Build and run the application  
+- `make clean` - Remove build artifacts
+- `make test` - Run tests
+- `make tidy` - Tidy Go dependencies
+- `make docker-up` - Start Docker Compose Kafka environment
+- `make docker-down` - Stop Docker Compose environment
+- `make demo` - Set up demo data in Kafka
+- `make help` - Show all available commands
 
 ## Usage
 
