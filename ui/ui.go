@@ -115,7 +115,7 @@ func (m Model) Init() tea.Cmd {
 // updateMainMenu updates the main menu items based on connection status
 func (m *Model) updateMainMenu() {
 	var mainMenuItems []list.Item
-	
+
 	if m.kafkaClient == nil {
 		// If not connected, add Reconnect option
 		mainMenuItems = []list.Item{
@@ -130,7 +130,7 @@ func (m *Model) updateMainMenu() {
 			item{title: "Quit", desc: "Exit the application"},
 		}
 	}
-	
+
 	m.mainMenu.SetItems(mainMenuItems)
 }
 
@@ -223,7 +223,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case groupDetailsMsg:
 		m.loading = false
 		m.currentView = ConsumerGroupDetailsView
-		
+
 		columns := []table.Column{
 			{Title: "Topic", Width: 30},
 			{Title: "Partition", Width: 10},
@@ -395,7 +395,7 @@ func (m Model) connectKafka() tea.Cmd {
 func (m Model) goBack() Model {
 	m.err = nil
 	m.statusMsg = ""
-	
+
 	switch m.currentView {
 	case ConsumerGroupsListView, TopicsListView:
 		m.currentView = MainMenuView
@@ -404,7 +404,7 @@ func (m Model) goBack() Model {
 	case TopicDetailsView, MessagesView:
 		m.currentView = TopicsListView
 	}
-	
+
 	return m
 }
 
@@ -415,7 +415,7 @@ func (m Model) handleEnter() (tea.Model, tea.Cmd) {
 		if selected == nil {
 			return m, nil
 		}
-		
+
 		switch selected.(item).title {
 		case "Reconnect to Kafka":
 			m.loading = true

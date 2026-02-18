@@ -18,20 +18,20 @@ type Client struct {
 
 // ConsumerGroupInfo holds information about a consumer group
 type ConsumerGroupInfo struct {
-	GroupID     string
-	State       string
-	Protocol    string
+	GroupID       string
+	State         string
+	Protocol      string
 	PartitionInfo []PartitionInfo
 }
 
 // PartitionInfo holds partition details including lag
 type PartitionInfo struct {
-	Topic     string
-	Partition int32
-	Offset    int64
+	Topic        string
+	Partition    int32
+	Offset       int64
 	LogEndOffset int64
-	Lag       int64
-	MemberID  string
+	Lag          int64
+	MemberID     string
 }
 
 // TopicInfo holds topic information

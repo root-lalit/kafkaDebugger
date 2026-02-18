@@ -18,7 +18,7 @@ func main() {
 	addAliasFlag := flag.String("add-alias", "", "Add broker alias (format: name:broker1:9092,broker2:9092)")
 	listAliasFlag := flag.Bool("list-aliases", false, "List all broker aliases")
 	removeAliasFlag := flag.String("remove-alias", "", "Remove broker alias")
-	
+
 	flag.Parse()
 
 	// Load configuration
@@ -46,7 +46,7 @@ func main() {
 
 	// Determine broker addresses
 	var brokers string
-	
+
 	// Priority: 1. Command-line flag, 2. Alias, 3. Environment variable, 4. Default from config, 5. localhost
 	if *brokerFlag != "" {
 		brokers = *brokerFlag
@@ -102,7 +102,7 @@ func handleAddAlias(cfg *config.Config, aliasSpec string) {
 	}
 
 	fmt.Printf("✓ Successfully added/updated alias '%s' with brokers: %s\n", name, strings.Join(brokerList, ", "))
-	
+
 	// Show config file location
 	configPath, _ := config.GetConfigPath()
 	fmt.Printf("  Config saved to: %s\n", configPath)
@@ -128,7 +128,7 @@ func handleListAliases(cfg *config.Config) {
 			fmt.Printf("    - %s\n", b)
 		}
 	}
-	
+
 	// Show config file location
 	configPath, _ := config.GetConfigPath()
 	fmt.Printf("\nConfig file: %s\n", configPath)
