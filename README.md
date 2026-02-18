@@ -125,21 +125,72 @@ By default, the application connects to `localhost:9092`:
 ./kafkaDebugger
 ```
 
-### Custom Kafka Brokers
+### Managing Broker Aliases
 
-Set the `KAFKA_BROKERS` environment variable to connect to different brokers:
+The tool supports storing broker configurations with aliases for easy access. Configurations are stored in `~/.kafkaDebugger/config.json`.
+
+#### Add a Broker Alias
 
 ```bash
-# Single broker
-export KAFKA_BROKERS="kafka1.example.com:9092"
-./kafkaDebugger
+# Add a single broker
+./kafkaDebugger -add-alias local:localhost:9092
 
-# Multiple brokers
-export KAFKA_BROKERS="kafka1.example.com:9092,kafka2.example.com:9092,kafka3.example.com:9092"
+# Add multiple brokers
+./kafkaDebugger -add-alias prod:kafka1.example.com:9092,kafka2.example.com:9092,kafka3.example.com:9092
+```
+
+#### List All Aliases
+
+```bash
+./kafkaDebugger -list-aliases
+```
+
+#### Remove an Alias
+
+```bash
+./kafkaDebugger -remove-alias prod
+```
+
+#### Use an Alias
+
+```bash
+./kafkaDebugger -alias local
+./kafkaDebugger -alias prod
+```
+
+### Custom Kafka Brokers
+
+You can specify brokers in multiple ways (in order of priority):
+
+1. **Command-line flag** (highest priority):
+```bash
+./kafkaDebugger -brokers kafka1.example.com:9092,kafka2.example.com:9092
+```
+
+2. **Alias from config file**:
+```bash
+./kafkaDebugger -alias prod
+```
+
+3. **Environment variable**:
+```bash
+export KAFKA_BROKERS="kafka1.example.com:9092,kafka2.example.com:9092"
 ./kafkaDebugger
 
 # Or inline
 KAFKA_BROKERS="kafka.example.com:9092" ./kafkaDebugger
+```
+
+4. **Default** (lowest priority): `localhost:9092`
+
+### Running from Anywhere
+
+The tool can be run from any directory. The configuration file is stored in your home directory at `~/.kafkaDebugger/config.json`, so broker aliases are available system-wide.
+
+```bash
+# Works from any directory
+cd /tmp
+/path/to/kafkaDebugger -alias local
 ```
 
 ## Navigation
@@ -153,17 +204,46 @@ KAFKA_BROKERS="kafka.example.com:9092" ./kafkaDebugger
 
 ### Application Flow
 
-1. **Main Menu**: Choose between Consumer Groups, Topics, or Quit
-2. **Consumer Groups**:
+1. **Main Menu**: Choose between Consumer Groups, Topics, Reconnect, or Quit
+2. **Connection Issues**: If the initial connection to Kafka fails, the main menu will display a "Reconnect to Kafka" option
+3. **Consumer Groups**:
    - View list of all consumer groups
    - Select a group to see detailed information
    - View lag, offsets, and member assignments
-3. **Topics**:
+4. **Topics**:
    - Browse all topics
    - Select a topic to view messages
    - See latest messages from partition 0 (default)
 
+### Handling Connection Errors
+
+If the application cannot connect to Kafka brokers:
+
+1. The main menu will show "Reconnect to Kafka" option
+2. Error details will be displayed at the bottom of the screen
+3. Select "Reconnect to Kafka" to retry the connection
+4. Verify your broker addresses and network connectivity
+
 ## Examples
+
+### Using Broker Aliases
+
+```bash
+# Add your development environment
+./kafkaDebugger -add-alias dev:dev-kafka:9092
+
+# Add your production environment
+./kafkaDebugger -add-alias prod:kafka1.prod.com:9092,kafka2.prod.com:9092,kafka3.prod.com:9092
+
+# List all configured environments
+./kafkaDebugger -list-aliases
+
+# Connect to development
+./kafkaDebugger -alias dev
+
+# Connect to production
+./kafkaDebugger -alias prod
+```
 
 ### Monitoring Consumer Group Lag
 
@@ -225,7 +305,9 @@ The application is built with:
 
 ```
 kafkaDebugger/
-├── main.go           # Application entry point
+├── main.go           # Application entry point with CLI flags
+├── config/
+│   └── config.go     # Configuration management for broker aliases
 ├── kafka/
 │   └── client.go     # Kafka client wrapper and operations
 ├── ui/
@@ -236,9 +318,51 @@ kafkaDebugger/
 
 ## Configuration
 
+### Broker Aliases Configuration File
+
+The application stores broker configurations in `~/.kafkaDebugger/config.json`. This file is automatically created when you add your first alias.
+
+Example configuration:
+```json
+{
+  "defaultAlias": "local",
+  "brokers": [
+    {
+      "name": "local",
+      "brokers": ["localhost:9092"]
+    },
+    {
+      "name": "prod",
+      "brokers": [
+        "kafka1.example.com:9092",
+        "kafka2.example.com:9092",
+        "kafka3.example.com:9092"
+      ]
+    }
+  ]
+}
+```
+
+### Command-Line Options
+
+- `-brokers`: Specify broker addresses directly
+- `-alias`: Use a named broker configuration
+- `-add-alias`: Add or update a broker alias
+- `-list-aliases`: List all configured aliases
+- `-remove-alias`: Remove a broker alias
+
 ### Environment Variables
 
 - `KAFKA_BROKERS`: Comma-separated list of Kafka broker addresses (default: `localhost:9092`)
+
+### Configuration Priority
+
+The application uses the following priority order (highest to lowest):
+1. `-brokers` command-line flag
+2. `-alias` command-line flag
+3. `KAFKA_BROKERS` environment variable
+4. `defaultAlias` from config file
+5. Default: `localhost:9092`
 
 ### Future Configuration Options
 
@@ -252,6 +376,37 @@ The following configuration options may be added in future versions:
 
 ## Troubleshooting
 
+### "Kafka Client Not Initialized" Error
+
+If you see this error:
+
+1. **Check broker connectivity**: Ensure you can reach the Kafka brokers from your machine
+   ```bash
+   telnet kafka-broker 9092
+   # or
+   nc -zv kafka-broker 9092
+   ```
+
+2. **Verify broker addresses**: Make sure the broker addresses are correct
+   ```bash
+   # List your configured aliases
+   ./kafkaDebugger -list-aliases
+   
+   # Try connecting with explicit brokers
+   ./kafkaDebugger -brokers localhost:9092
+   ```
+
+3. **Use the Reconnect option**: If the initial connection fails, the main menu will show "Reconnect to Kafka". Select this option to retry the connection.
+
+4. **Check Kafka broker status**: Ensure Kafka is running and accepting connections
+   ```bash
+   # If using Docker
+   docker ps | grep kafka
+   
+   # Check broker logs
+   docker logs kafka
+   ```
+
 ### Connection Issues
 
 If you can't connect to Kafka:
@@ -260,6 +415,7 @@ If you can't connect to Kafka:
 2. Check network connectivity: `telnet kafka-broker 9092`
 3. Ensure your firewall allows connections to Kafka ports
 4. Check Kafka broker logs for connection errors
+5. Try using the reconnect feature from the main menu
 
 ### No Consumer Groups Listed
 

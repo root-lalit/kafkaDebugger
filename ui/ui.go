@@ -112,6 +112,28 @@ func (m Model) Init() tea.Cmd {
 	return m.connectKafka()
 }
 
+// updateMainMenu updates the main menu items based on connection status
+func (m *Model) updateMainMenu() {
+	var mainMenuItems []list.Item
+	
+	if m.kafkaClient == nil {
+		// If not connected, add Reconnect option
+		mainMenuItems = []list.Item{
+			item{title: "Reconnect to Kafka", desc: "Retry connection to Kafka brokers"},
+			item{title: "Quit", desc: "Exit the application"},
+		}
+	} else {
+		// If connected, show normal menu
+		mainMenuItems = []list.Item{
+			item{title: "Consumer Groups", desc: "View and manage consumer groups"},
+			item{title: "Topics", desc: "Browse topics and partitions"},
+			item{title: "Quit", desc: "Exit the application"},
+		}
+	}
+	
+	m.mainMenu.SetItems(mainMenuItems)
+}
+
 // Update handles messages and updates the model
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
@@ -152,6 +174,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case errMsg:
 		m.err = msg.err
 		m.loading = false
+		// Update main menu to show reconnect option if client is nil
+		if m.currentView == MainMenuView {
+			m.updateMainMenu()
+		}
 		return m, nil
 
 	case statusMsg:
@@ -163,6 +189,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.kafkaClient = msg
 		m.statusMsg = "Connected to Kafka"
 		m.loading = false
+		// Update main menu to show normal options
+		if m.currentView == MainMenuView {
+			m.updateMainMenu()
+		}
 		return m, nil
 
 	case consumerGroupsMsg:
@@ -387,10 +417,23 @@ func (m Model) handleEnter() (tea.Model, tea.Cmd) {
 		}
 		
 		switch selected.(item).title {
+		case "Reconnect to Kafka":
+			m.loading = true
+			m.err = nil
+			m.statusMsg = ""
+			return m, m.connectKafka()
 		case "Consumer Groups":
+			if m.kafkaClient == nil {
+				m.err = fmt.Errorf("kafka client not initialized - please reconnect")
+				return m, nil
+			}
 			m.loading = true
 			return m, m.loadConsumerGroups()
 		case "Topics":
+			if m.kafkaClient == nil {
+				m.err = fmt.Errorf("kafka client not initialized - please reconnect")
+				return m, nil
+			}
 			m.loading = true
 			return m, m.loadTopics()
 		case "Quit":
