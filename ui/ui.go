@@ -381,6 +381,15 @@ func (m Model) View() string {
 
 // Helper functions
 
+// isClientConnected checks if the Kafka client is initialized and sets an error if not
+func (m *Model) isClientConnected() bool {
+	if m.kafkaClient == nil {
+		m.err = fmt.Errorf("kafka client not initialized - please reconnect")
+		return false
+	}
+	return true
+}
+
 func (m Model) connectKafka() tea.Cmd {
 	return func() tea.Msg {
 		brokers := strings.Split(m.brokers, ",")
@@ -423,15 +432,13 @@ func (m Model) handleEnter() (tea.Model, tea.Cmd) {
 			m.statusMsg = ""
 			return m, m.connectKafka()
 		case "Consumer Groups":
-			if m.kafkaClient == nil {
-				m.err = fmt.Errorf("kafka client not initialized - please reconnect")
+			if !m.isClientConnected() {
 				return m, nil
 			}
 			m.loading = true
 			return m, m.loadConsumerGroups()
 		case "Topics":
-			if m.kafkaClient == nil {
-				m.err = fmt.Errorf("kafka client not initialized - please reconnect")
+			if !m.isClientConnected() {
 				return m, nil
 			}
 			m.loading = true
