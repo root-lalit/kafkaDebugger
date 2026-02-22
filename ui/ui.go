@@ -83,10 +83,9 @@ var (
 
 // NewModel creates a new application model
 func NewModel(brokers string) Model {
-	// Create main menu items
+	// Start with the "connecting" menu - will be updated after connection attempt completes
 	mainMenuItems := []list.Item{
-		item{title: "Consumer Groups", desc: "View and manage consumer groups"},
-		item{title: "Topics", desc: "Browse topics and partitions"},
+		item{title: "Reconnect to Kafka", desc: "Retry connection to Kafka brokers"},
 		item{title: "Quit", desc: "Exit the application"},
 	}
 
@@ -104,6 +103,7 @@ func NewModel(brokers string) Model {
 		currentView: MainMenuView,
 		mainMenu:    mainMenu,
 		input:       ti,
+		loading:     true,
 	}
 }
 
