@@ -87,6 +87,11 @@ func (c *Client) Close() error {
 	return nil
 }
 
+// IsClosed reports whether the underlying sarama client has been closed
+func (c *Client) IsClosed() bool {
+	return c.client == nil || c.client.Closed()
+}
+
 // ListConsumerGroups returns a list of all consumer groups
 func (c *Client) ListConsumerGroups() ([]string, error) {
 	groups, err := c.admin.ListConsumerGroups()

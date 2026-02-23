@@ -174,10 +174,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case errMsg:
 		m.err = msg.err
 		m.loading = false
-		// Update main menu to show reconnect option if client is nil
-		if m.currentView == MainMenuView {
-			m.updateMainMenu()
+		// If the underlying client has closed itself (e.g. broker unreachable),
+		// reset it so the menu shows "Reconnect to Kafka" again.
+		if m.kafkaClient != nil && m.kafkaClient.IsClosed() {
+			m.kafkaClient = nil
 		}
+		// Always update so the menu is correct when the user returns to MainMenuView
+		m.updateMainMenu()
 		return m, nil
 
 	case statusMsg:
@@ -187,12 +190,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case kafkaClientMsg:
 		m.kafkaClient = msg
+		m.err = nil
 		m.statusMsg = "Connected to Kafka"
 		m.loading = false
-		// Update main menu to show normal options
-		if m.currentView == MainMenuView {
-			m.updateMainMenu()
-		}
+		// Always update so the menu reflects the new connection state
+		m.updateMainMenu()
 		return m, nil
 
 	case consumerGroupsMsg:
@@ -427,6 +429,10 @@ func (m Model) handleEnter() (tea.Model, tea.Cmd) {
 
 		switch selected.(item).title {
 		case "Reconnect to Kafka":
+			if m.kafkaClient != nil {
+				m.kafkaClient.Close()
+				m.kafkaClient = nil
+			}
 			m.loading = true
 			m.err = nil
 			m.statusMsg = ""
